@@ -1,8 +1,32 @@
---- :Popup <sub> [args] dispatcher and its completion.
+--- :Popup <sub> dispatcher and its completion.
 local M = {}
 
 --- @type table<string, fun(args: string[], bang: boolean)>
-M.subcommands = {}
+M.subcommands = {
+  -- A sample list menu, to see the borders, colours and key legend.
+  demo = function()
+    require("popup.list_menu").open {
+      title = "popup.nvim demo",
+      header = { "Sample list menu", { text = "colours follow the theme", level = "info" } },
+      groups = {
+        {
+          title = "Installed",
+          items = {
+            { id = 1, label = "stylua", hint = "keywords: lua", mark = true, level = "ok" },
+            { id = 2, label = "prettier", hint = "keywords: js, css" },
+          },
+        },
+        { title = "Available", items = { { id = 3, label = "shfmt", hint = "keywords: sh", level = "warn" } } },
+      },
+      keys = { { key = "<C-q>", desc = "never ask again", fn = function() end } },
+      footer = { { text = "nothing here is saved", level = "warn" } },
+      on_select = function(item, close)
+        close()
+        vim.notify("popup demo: picked " .. item.label)
+      end,
+    }
+  end,
+}
 
 --- @param fargs string[]
 --- @param bang boolean

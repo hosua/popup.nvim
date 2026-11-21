@@ -5,7 +5,12 @@ local M = {}
 
 --- @class PopupConfig
 M.defaults = {
-  notify = true,
+  -- "auto" follows 'winborder', else "rounded". Any nvim_open_win border works.
+  border = "auto",
+  -- Share of the screen height a list menu may use.
+  menu_max_height = 0.7,
+  -- Warn once when a Vim popup option has no Neovim equivalent.
+  warn_unsupported = true,
 }
 
 local resolved

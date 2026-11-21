@@ -1,0 +1,25 @@
+*popup.txt*  Vim-style popups and shared float components
+
+Port of the nvim-lua/popup.nvim API (MIT, TJ DeVries) plus float, key-legend
+and list-menu modules. See README.md for every option.
+
+                                                                 *popup.create()*
+popup.create({what}, {vim_options})
+    Open a popup. {what} is a string, a list of lines, or a buffer number.
+    Returns the window id and { win_id, bufnr }.
+
+popup.move({win}, {vim_options})      Move or resize a popup.
+popup.close({win}, {result})          Close it and run its callbacks.
+popup.clear()                         Close every popup made by create().
+popup.hide({win}) / popup.show({win})
+popup.settext({win}, {text})
+popup.getpos({win})                   line, col, width, height, visible
+
+                                                                 *:Popup*
+:Popup demo                           Open a sample list menu.
+
+Highlight groups (all default links): PopupError PopupWarn PopupOk PopupInfo
+PopupKey PopupKeyDesc PopupTitle PopupGroup PopupNormal PopupBorder PopupHint
+PopupMark PopupBullet PopupLabel PopupFooter
+
+ vim:tw=78:ft=help:norl:
