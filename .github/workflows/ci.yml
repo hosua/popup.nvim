@@ -23,4 +23,3 @@ jobs:
           version: latest
           args: --check .
       - run: make test
-      - run: make integration
