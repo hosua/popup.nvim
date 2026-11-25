@@ -26,10 +26,11 @@
 ---     `remember = true`. `opts.remember_keys` (say { "<S-CR>" }) answers the
 ---     selected row with `remember = true`
 ---   * the rows show the label only. Without `opts.footer` the border lists
----     j/k, Enter, every choice key and q
+---     j/k, Enter, every choice key, the remember keys and q/Esc/C-c
 ---
 --- `opts.footer` (chunks, see popup.legend.footer) replaces the default
---- ` q cancel ` footer in either mode; `opts.footer_pos` is "left" (default),
+--- default footer in either mode (every choice key, the remember keys and
+--- `q/Esc/C-c cancel`); `opts.footer_pos` is "left" (default),
 --- "center" or "right". The window is at least as wide as its footer.
 local float = require "popup.float"
 local geometry = require "popup.geometry"
@@ -84,16 +85,22 @@ function M.build(opts)
   end
   local footer = opts.footer
   if not footer then
+    local entries = {}
     if opts.menu then
-      local entries = { { "j/k", "move" }, { "⏎", "pick" } }
-      for _, c in ipairs(opts.choices) do
-        entries[#entries + 1] = { c.key, c.label }
-      end
-      entries[#entries + 1] = { "q", "cancel" }
-      footer = legend.footer(entries, { key_hl = hl.key, desc_hl = hl.footer })
-    else
-      footer = { { " q", hl.key }, { " cancel ", hl.footer } }
+      entries = { { "j/k", "move" }, { "⏎", "pick" } }
     end
+    for _, c in ipairs(opts.choices) do
+      entries[#entries + 1] = { c.key, c.label }
+      if c.remember_key then
+        entries[#entries + 1] = { legend.key_label(c.remember_key), c.label .. " + remember" }
+      end
+    end
+    if opts.menu and opts.remember_keys and #opts.remember_keys > 0 then
+      local keys = vim.tbl_map(legend.key_label, opts.remember_keys)
+      entries[#entries + 1] = { table.concat(keys, "/"), "pick + remember" }
+    end
+    entries[#entries + 1] = { "q/Esc/C-c", "cancel" }
+    footer = legend.footer(entries, { key_hl = hl.key, desc_hl = hl.footer })
   end
   local width = vim.fn.strdisplaywidth(opts.title or "") + 4
   for _, l in ipairs(lines) do

@@ -78,7 +78,7 @@ describe("confirm", function()
     }
     assert.are.same({ "  M  init.lua", "", "  w  write", "  n  no" }, out.lines)
     assert.are.equal("PopupError", out.spans[#out.spans].hl)
-    assert.are.equal(15, out.width)
+    assert.are.equal(33, out.width) -- the default footer is wider than the body
   end)
 
   it("answers with the choice value, nil on cancel", function()
@@ -151,13 +151,16 @@ describe("confirm.build in menu mode", function()
     assert.are.equal("PopupSelect", out.select_hl)
   end)
 
-  it("lists j/k, Enter, the choice keys and q in the default footer", function()
-    local out = confirm.build { title = "t", menu = true, choices = choices }
+  it("lists j/k, Enter, the choice and remember keys and q/Esc/C-c in the default footer", function()
+    local out = confirm.build { title = "t", menu = true, choices = choices, remember_keys = { "<S-CR>" } }
     local text = ""
     for _, c in ipairs(out.footer) do
       text = text .. c[1]
     end
-    assert.are.equal(" j/k move  ⏎ pick  y Load it  n Start empty  q cancel ", text)
+    assert.are.equal(
+      " j/k move  ⏎ pick  y Load it  Y Load it + remember  n Start empty  N Start empty + remember  S-CR pick + remember  q/Esc/C-c cancel ",
+      text
+    )
   end)
 
   it("takes the given footer and widens the window to it", function()
@@ -171,7 +174,14 @@ describe("confirm.build in menu mode", function()
     local out = confirm.build { title = "t", choices = choices }
     assert.are.same({ "  y  Load it", "  n  Start empty" }, out.lines)
     assert.is_nil(out.select_hl)
-    assert.are.equal(" q", out.footer[1][1])
+    local text = ""
+    for _, c in ipairs(out.footer) do
+      text = text .. c[1]
+    end
+    assert.are.equal(
+      " y Load it  Y Load it + remember  n Start empty  N Start empty + remember  q/Esc/C-c cancel ",
+      text
+    )
   end)
 end)
 

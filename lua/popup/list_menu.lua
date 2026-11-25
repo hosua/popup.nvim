@@ -64,12 +64,14 @@ local function groups_for(spec)
   return vim.tbl_extend("force", M.HL, spec.hl or {})
 end
 
---- The legend entries for a spec: j/k, Enter, spec.keys, the dismiss keys.
+--- The legend entries for a spec: every key the menu maps (j/k, the arrows,
+--- gg/G, Enter), spec.keys, the dismiss keys.
 --- @param spec table
 --- @return { key: string, desc: string }[]
 local function legend_entries(spec)
   local entries = {
-    { key = "j/k", desc = "move" },
+    { key = "j/k/↑/↓", desc = "move" },
+    { key = "gg/G", desc = "first/last" },
     { key = "<CR>", desc = spec.select_desc or "select" },
   }
   for _, k in ipairs(spec.keys or {}) do

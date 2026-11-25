@@ -82,7 +82,7 @@ require("popup.confirm").open {
   remember_keys = { "<S-CR>" },
   footer = (legend.footer {
     { "j/k", "move" }, { "⏎", "pick" }, { "⇧⏎", "pick+remember" },
-    { "y", "load" }, { "n", "skip" }, { "Y/N", "always" }, { "q", "cancel" },
+    { "y", "load" }, { "n", "skip" }, { "Y", "always" }, { "N", "never" }, { "q/Esc/C-c", "cancel" },
   }),
   footer_pos = "right",
   on_choice = function(value, info) -- info.remember is true for Y, N and <S-CR>
@@ -93,7 +93,7 @@ require("popup.confirm").open {
 - `j` / `k` move between the rows and stop at both ends (no wrap). They take a count. Nothing else moves the selection: arrows, `gg`, `G` and the mouse are put back by a `CursorMoved` autocmd.
 - `<CR>` answers with the selected row. A choice's `key` answers it directly. `remember_key` and `remember_keys` answer with `info.remember = true`. Every other answer, and a cancel (`q`, `<Esc>`, `<C-c>`), passes `remember = false`.
 - The selected row uses `hl.select` (default `PopupSelect`, linked to `PmenuSel`). Menu rows show the label only, and there is no blank line before them, so put one in `lines` if you want it.
-- `footer` takes the chunks `legend.footer(entries, opts)` returns (entries are `{ key, desc }`, two spaces between pairs, `opts.key_hl` / `opts.desc_hl`). `footer_pos` is `"left"`, `"center"` or `"right"`. The window is widened to the footer. Without `footer`, a menu lists `j/k`, `⏎`, every choice key and `q`.
+- `footer` takes the chunks `legend.footer(entries, opts)` returns (entries are `{ key, desc }`, two spaces between pairs, `opts.key_hl` / `opts.desc_hl`). `footer_pos` is `"left"`, `"center"` or `"right"`. The window is widened to the footer. Without `footer`, both modes list every choice key, the remember keys and `q/Esc/C-c cancel` (a menu also lists `j/k` and `⏎`).
 
 List menu, as in the old `configs/list_menu.lua`:
 
@@ -106,7 +106,7 @@ require("popup.list_menu").open {
 }
 ```
 
-Keys inside the menu: `j`/`k`/arrows move, `gg`/`G` jump, `<CR>` selects, `q`/`<Esc>` dismiss (`dismiss_keys = {}` frees both).
+Keys inside the menu (all listed in the legend): `j`/`k`/arrows move, `gg`/`G` jump, `<CR>` selects, `q`/`<Esc>` dismiss (`dismiss_keys = {}` frees both).
 
 `border_legend = true` moves the key legend out of the rows into one line in the bottom border (`list_menu.border_footer(spec)` builds it). The window is widened to fit it.
 

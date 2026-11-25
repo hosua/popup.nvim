@@ -25,7 +25,8 @@ describe("list_menu.build", function()
       "Other",
       "  •    y",
       "",
-      "  • j/k      move",
+      "  • j/k/↑/↓  move",
+      "  • gg/G     first/last",
       "  • Enter    select",
       "  • Ctrl+q   never",
       "  • q/<Esc>  dismiss",
@@ -66,7 +67,7 @@ describe("list_menu.build", function()
 
   it("frees the dismiss keys when asked", function()
     local l = list_menu.build(vim.tbl_extend("force", spec, { dismiss_keys = {}, footer = {} }))
-    assert.are.equal("  • Ctrl+q  never", l[#l])
+    assert.are.equal("  • Ctrl+q   never", l[#l])
   end)
 end)
 
@@ -93,7 +94,7 @@ describe("list_menu border_legend", function()
     for _, c in ipairs(chunks) do
       text = text .. c[1]
     end
-    assert.are.equal(" j/k move  Enter select  x reset  q/<Esc> dismiss ", text)
+    assert.are.equal(" j/k/↑/↓ move  gg/G first/last  Enter select  x reset  q/<Esc> dismiss ", text)
     assert.are.equal(vim.fn.strdisplaywidth(text), width)
   end)
 
