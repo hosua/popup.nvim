@@ -58,7 +58,7 @@ Differences from upstream: borders are Neovim's native ones, not extra windows, 
 | Module | What it is |
 |---|---|
 | `popup.float` | `open(opts)`, `paint(f, out, opts)`, `configure`, `close`, `is_open`, `on_resize`, `toast`, `note`. The one place that opens plain floats. |
-| `popup.list_menu` | `open(spec)` and the pure `build(spec)`. Grouped read-only list with a key legend. |
+| `popup.list_menu` | `open(spec)`, the pure `build(spec)` and `border_footer(spec)`. Grouped read-only list with a key legend (rows, or one line in the border). |
 | `popup.confirm` | `open(opts)` (non-blocking modal with keyed choices, or a selectable menu with `menu = true`) and `choose(opts)` (blocking yes/no). |
 | `popup.legend` | Pure: `rows`, `help`, `key_label`, `width`, `footer`. Aligned key legends, and the one-line legend for a window's bottom border. |
 | `popup.hints` | Pure: `text`, `line`, `chunks`, `wrap`, `table`, `help`. Key hints and footers. |
@@ -107,6 +107,8 @@ require("popup.list_menu").open {
 ```
 
 Keys inside the menu: `j`/`k`/arrows move, `gg`/`G` jump, `<CR>` selects, `q`/`<Esc>` dismiss (`dismiss_keys = {}` frees both).
+
+`border_legend = true` moves the key legend out of the rows into one line in the bottom border (`list_menu.border_footer(spec)` builds it). The window is widened to fit it.
 
 ## Highlight groups
 
