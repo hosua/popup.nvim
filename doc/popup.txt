@@ -15,11 +15,28 @@ popup.hide({win}) / popup.show({win})
 popup.settext({win}, {text})
 popup.getpos({win})                   line, col, width, height, visible
 
+                                                                 *popup.confirm*
+require("popup.confirm").open({opts})
+    Small modal. {opts}: title, lines (chunks per line), choices
+    ({ key, label, value, danger?, remember_key? }), on_choice(value, info),
+    footer (chunks), footer_pos ("left"|"center"|"right"), hl, winhl.
+    {info}.remember is true only for a remember key.
+    menu = true makes the choices rows: j/k move (clamped, no wrap, other
+    motions are put back), <CR> answers with the selected row, {default} is
+    the starting index, {remember_keys} (like { "<S-CR>" }) answer the
+    selected row with remember = true. Highlight: PopupSelect.
+
+                                                                 *popup.legend.footer()*
+legend.footer({entries}, {opts})
+    Chunks and display width for a one-line key legend in a float footer:
+    " key desc  key desc ". {entries} are { key, desc }; {opts}.key_hl and
+    {opts}.desc_hl default to PopupKey and PopupFooter.
+
                                                                  *:Popup*
 :Popup demo                           Open a sample list menu.
 
 Highlight groups (all default links): PopupError PopupWarn PopupOk PopupInfo
 PopupKey PopupKeyDesc PopupTitle PopupGroup PopupNormal PopupBorder PopupHint
-PopupMark PopupBullet PopupLabel PopupFooter
+PopupMark PopupBullet PopupLabel PopupFooter PopupSelect
 
  vim:tw=78:ft=help:norl:

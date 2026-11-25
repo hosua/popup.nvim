@@ -1,4 +1,5 @@
 local float = require "popup.float"
+local legend = require "popup.legend"
 local confirm = require "popup.confirm"
 local list_menu = require "popup.list_menu"
 
@@ -129,5 +130,66 @@ describe("list_menu.open", function()
     assert.is_nil(list_menu.open { groups = { { title = "G", items = {} } } })
     vim.notify = notify
     assert.is_truthy(warned:find("nothing to show", 1, true))
+  end)
+end)
+
+describe("confirm.build in menu mode", function()
+  local choices = {
+    { key = "y", label = "Load it", value = "yes", remember_key = "Y" },
+    { key = "n", label = "Start empty", value = "no", remember_key = "N" },
+  }
+
+  it("turns choices into label rows with no blank line before them", function()
+    local out = confirm.build {
+      title = "t",
+      menu = true,
+      lines = { { { "  Project  x" } }, { { "" } } },
+      choices = choices,
+    }
+    assert.are.same({ "  Project  x", "", "  Load it  ", "  Start empty  " }, out.lines)
+    assert.are.same({ 2, 3 }, out.choice_rows)
+    assert.are.equal("PopupSelect", out.select_hl)
+  end)
+
+  it("lists j/k, Enter, the choice keys and q in the default footer", function()
+    local out = confirm.build { title = "t", menu = true, choices = choices }
+    local text = ""
+    for _, c in ipairs(out.footer) do
+      text = text .. c[1]
+    end
+    assert.are.equal(" j/k move  ⏎ pick  y Load it  n Start empty  q cancel ", text)
+  end)
+
+  it("takes the given footer and widens the window to it", function()
+    local footer = legend.footer { { "a", "one" }, { "b", "a rather long description" } }
+    local out = confirm.build { title = "t", menu = true, choices = choices, footer = footer }
+    assert.are.same(footer, out.footer)
+    assert.are.equal(select(2, legend.footer { { "a", "one" }, { "b", "a rather long description" } }), out.width)
+  end)
+
+  it("leaves plain mode as it was", function()
+    local out = confirm.build { title = "t", choices = choices }
+    assert.are.same({ "  y  Load it", "  n  Start empty" }, out.lines)
+    assert.is_nil(out.select_hl)
+    assert.are.equal(" q", out.footer[1][1])
+  end)
+end)
+
+describe("legend.footer", function()
+  it("joins pairs two spaces apart, key bright and desc grey, padded by a space", function()
+    local chunks, width = legend.footer { { "j/k", "move" }, { key = "⏎", desc = "pick" } }
+    assert.are.same({
+      { " ", "PopupFooter" },
+      { "j/k", "PopupKey" },
+      { " move  ", "PopupFooter" },
+      { "⏎", "PopupKey" },
+      { " pick ", "PopupFooter" },
+    }, chunks)
+    assert.are.equal(vim.fn.strdisplaywidth " j/k move  ⏎ pick ", width)
+  end)
+
+  it("takes other groups", function()
+    local chunks = legend.footer({ { "q", "quit" } }, { key_hl = "K", desc_hl = "D" })
+    assert.are.same({ { " ", "D" }, { "q", "K" }, { " quit ", "D" } }, chunks)
   end)
 end)
