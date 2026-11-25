@@ -58,13 +58,42 @@ Differences from upstream: borders are Neovim's native ones, not extra windows, 
 | Module | What it is |
 |---|---|
 | `popup.float` | `open(opts)`, `paint(f, out, opts)`, `configure`, `close`, `is_open`, `on_resize`, `toast`, `note`. The one place that opens plain floats. |
-| `popup.list_menu` | `open(spec)` and the pure `build(spec)`. Grouped read-only list with a key legend. |
-| `popup.confirm` | `open(opts)` (non-blocking modal with keyed choices) and `choose(opts)` (blocking yes/no). |
-| `popup.legend` | Pure: `rows`, `help`, `key_label`, `width`. Aligned key legends. |
+| `popup.list_menu` | `open(spec)`, the pure `build(spec)` and `border_footer(spec)`. Grouped read-only list with a key legend (rows, or one line in the border). |
+| `popup.confirm` | `open(opts)` (non-blocking modal with keyed choices, or a selectable menu with `menu = true`) and `choose(opts)` (blocking yes/no). |
+| `popup.legend` | Pure: `rows`, `help`, `key_label`, `width`, `footer`. Aligned key legends, and the one-line legend for a window's bottom border. |
 | `popup.hints` | Pure: `text`, `line`, `chunks`, `wrap`, `table`, `help`. Key hints and footers. |
 | `popup.borders` | `box`, `expand_chars`, `to_native`, `resolve`, `default`, `visible`. |
 | `popup.geometry` | `env`, `editor`, `centered`, `fractional`, `list`, `menu`, `toast`, `fit`. Pure given an `env`. |
 | `popup.highlights` | `define(groups)`, `apply()`, `winhl(pairs)`, `LINKS`, `WINHL`. |
+
+Confirm menu. With `menu = true` the choices are rows you move over:
+
+```lua
+local legend = require "popup.legend"
+require("popup.confirm").open {
+  title = "Load your last autosaved session?",
+  menu = true,
+  default = 2, -- index of the starting row
+  lines = { { { "  Project  ~/dev/app" } }, { { "" } } },
+  choices = {
+    { key = "y", label = "Load it", value = "yes", remember_key = "Y" },
+    { key = "n", label = "Start empty", value = "no", remember_key = "N" },
+  },
+  remember_keys = { "<S-CR>" },
+  footer = (legend.footer {
+    { "j/k", "move" }, { "⏎", "pick" }, { "⇧⏎", "pick+remember" },
+    { "y", "load" }, { "n", "skip" }, { "Y", "always" }, { "N", "never" }, { "q/Esc/C-c", "cancel" },
+  }),
+  footer_pos = "right",
+  on_choice = function(value, info) -- info.remember is true for Y, N and <S-CR>
+  end,
+}
+```
+
+- `j` / `k` move between the rows and stop at both ends (no wrap). They take a count. Nothing else moves the selection: arrows, `gg`, `G` and the mouse are put back by a `CursorMoved` autocmd.
+- `<CR>` answers with the selected row. A choice's `key` answers it directly. `remember_key` and `remember_keys` answer with `info.remember = true`. Every other answer, and a cancel (`q`, `<Esc>`, `<C-c>`), passes `remember = false`.
+- The selected row uses `hl.select` (default `PopupSelect`, linked to `PmenuSel`). Menu rows show the label only, and there is no blank line before them, so put one in `lines` if you want it.
+- `footer` takes the chunks `legend.footer(entries, opts)` returns (entries are `{ key, desc }`, two spaces between pairs, `opts.key_hl` / `opts.desc_hl`). `footer_pos` is `"left"`, `"center"` or `"right"`. The window is widened to the footer. Without `footer`, both modes list every choice key, the remember keys and `q/Esc/C-c cancel` (a menu also lists `j/k` and `⏎`).
 
 List menu, as in the old `configs/list_menu.lua`:
 
@@ -77,7 +106,9 @@ require("popup.list_menu").open {
 }
 ```
 
-Keys inside the menu: `j`/`k`/arrows move, `gg`/`G` jump, `<CR>` selects, `q`/`<Esc>` dismiss (`dismiss_keys = {}` frees both).
+Keys inside the menu (all listed in the legend): `j`/`k`/arrows move, `gg`/`G` jump, `<CR>` selects, `q`/`<Esc>` dismiss (`dismiss_keys = {}` frees both).
+
+`border_legend = true` moves the key legend out of the rows into one line in the bottom border (`list_menu.border_footer(spec)` builds it). The window is widened to fit it.
 
 ## Highlight groups
 
@@ -88,6 +119,7 @@ Every group is a `default` link, so a theme or your own `:hi` wins. Importance c
 | `PopupError`, `PopupWarn`, `PopupOk`, `PopupInfo` | `DiagnosticError`, `DiagnosticWarn`, `DiagnosticOk`, `DiagnosticInfo` |
 | `PopupKey`, `PopupBullet` | `Special` |
 | `PopupKeyDesc`, `PopupHint`, `PopupFooter` | `Comment` |
+| `PopupSelect` | `PmenuSel` |
 | `PopupTitle`, `PopupGroup` | `Title` |
 | `PopupNormal`, `PopupBorder`, `PopupLabel`, `PopupMark` | `NormalFloat`, `FloatBorder`, `Normal`, `DiagnosticOk` |
 

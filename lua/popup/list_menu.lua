@@ -19,6 +19,7 @@
 ---     select_desc = "open",                               -- legend text for <CR>, default "select"
 ---     on_dismiss = function() end,                        -- q / <Esc>
 ---     dismiss_keys = {},                                  -- default { "q", "<Esc>" }; {} frees both
+---     border_legend = true,                               -- legend as one line in the bottom border, not rows
 ---     hl = { key = "MyKey" },                             -- rename any group, see HL_KEYS
 ---   }
 ---
@@ -61,6 +62,38 @@ M.HL = {
 --- @return table<string, string>
 local function groups_for(spec)
   return vim.tbl_extend("force", M.HL, spec.hl or {})
+end
+
+--- The legend entries for a spec: every key the menu maps (j/k, the arrows,
+--- gg/G, Enter), spec.keys, the dismiss keys.
+--- @param spec table
+--- @return { key: string, desc: string }[]
+local function legend_entries(spec)
+  local entries = {
+    { key = "j/k/↑/↓", desc = "move" },
+    { key = "gg/G", desc = "first/last" },
+    { key = "<CR>", desc = spec.select_desc or "select" },
+  }
+  for _, k in ipairs(spec.keys or {}) do
+    entries[#entries + 1] = k
+  end
+  local dismiss_keys = spec.dismiss_keys or { "q", "<Esc>" }
+  if #dismiss_keys > 0 then
+    entries[#entries + 1] = { key = table.concat(dismiss_keys, "/"), desc = "dismiss" }
+  end
+  return entries
+end
+
+--- The legend as border footer chunks plus the width it needs. Pure.
+--- @param spec table
+--- @return table[] chunks, integer width
+function M.border_footer(spec)
+  local hl = groups_for(spec)
+  local entries = {}
+  for i, e in ipairs(legend_entries(spec)) do
+    entries[i] = { key = legend.key_label(e.key), desc = e.desc }
+  end
+  return legend.footer(entries, { key_hl = hl.key, desc_hl = hl.key_desc })
 end
 
 --- Build buffer lines plus what is needed to highlight and navigate them.
@@ -119,31 +152,22 @@ function M.build(spec)
     add ""
   end
 
-  local entries = {
-    { key = "j/k", desc = "move" },
-    { key = "<CR>", desc = spec.select_desc or "select" },
-  }
-  for _, k in ipairs(spec.keys or {}) do
-    entries[#entries + 1] = k
-  end
-  local dismiss_keys = spec.dismiss_keys or { "q", "<Esc>" }
-  if #dismiss_keys > 0 then
-    entries[#entries + 1] = { key = table.concat(dismiss_keys, "/"), desc = "dismiss" }
-  end
-  local l, spans = legend.rows(entries, {
-    indent = 2,
-    bullet = M.BULLET,
-    gap = 2,
-    key_hl = hl.key,
-    desc_hl = hl.key_desc,
-    bullet_hl = hl.bullet,
-    row = #lines,
-  })
-  for _, text in ipairs(l) do
-    lines[#lines + 1] = text
-  end
-  for _, s in ipairs(spans) do
-    marks[#marks + 1] = { row = s.row, hl = s.hl, from = s.col_start, to = s.col_end }
+  if not spec.border_legend then
+    local l, spans = legend.rows(legend_entries(spec), {
+      indent = 2,
+      bullet = M.BULLET,
+      gap = 2,
+      key_hl = hl.key,
+      desc_hl = hl.key_desc,
+      bullet_hl = hl.bullet,
+      row = #lines,
+    })
+    for _, text in ipairs(l) do
+      lines[#lines + 1] = text
+    end
+    for _, s in ipairs(spans) do
+      marks[#marks + 1] = { row = s.row, hl = s.hl, from = s.col_start, to = s.col_end }
+    end
   end
   if spec.footer and #spec.footer > 0 then
     add ""
@@ -172,7 +196,17 @@ function M.open(spec)
     spans[#spans + 1] =
       { row = m.row, col_start = m.from, col_end = m.to >= 0 and m.to or #lines[m.row + 1], hl = m.hl }
   end
-  local rect = geometry.menu(geometry.env(), legend.width(lines), #lines, require("popup.config").get().menu_max_height)
+  local footer, footer_w
+  if spec.border_legend then
+    footer, footer_w = M.border_footer(spec)
+  end
+  -- The legend lives in the border, so the window is at least as wide as it.
+  local rect = geometry.menu(
+    geometry.env(),
+    math.max(legend.width(lines), (footer_w or 2) - 2),
+    #lines,
+    require("popup.config").get().menu_max_height
+  )
   local f = float.open {
     rect = rect,
     lines = lines,
@@ -180,6 +214,7 @@ function M.open(spec)
     ns = NS,
     border = spec.border or "rounded",
     title = " " .. (spec.title or "") .. " ",
+    footer = footer,
     winhl = highlights.winhl {
       { "FloatBorder", hl.border },
       { "FloatTitle", hl.title },

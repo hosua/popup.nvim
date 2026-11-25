@@ -14,6 +14,7 @@ M.LINKS = {
   PopupGroup = "Title",
   PopupLabel = "Normal",
   PopupHint = "Comment",
+  PopupSelect = "PmenuSel",
   PopupMark = "DiagnosticOk",
   PopupBullet = "Special",
   PopupKey = "Special",

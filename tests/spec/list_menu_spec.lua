@@ -25,7 +25,8 @@ describe("list_menu.build", function()
       "Other",
       "  •    y",
       "",
-      "  • j/k      move",
+      "  • j/k/↑/↓  move",
+      "  • gg/G     first/last",
       "  • Enter    select",
       "  • Ctrl+q   never",
       "  • q/<Esc>  dismiss",
@@ -66,6 +67,43 @@ describe("list_menu.build", function()
 
   it("frees the dismiss keys when asked", function()
     local l = list_menu.build(vim.tbl_extend("force", spec, { dismiss_keys = {}, footer = {} }))
-    assert.are.equal("  • Ctrl+q  never", l[#l])
+    assert.are.equal("  • Ctrl+q   never", l[#l])
+  end)
+end)
+
+describe("list_menu border_legend", function()
+  local spec = {
+    title = "T",
+    border_legend = true,
+    groups = { { title = "G", items = { { id = 1, label = "a" } } } },
+    keys = { { key = "x", desc = "reset", fn = function() end } },
+  }
+
+  it("keeps the legend out of the rows", function()
+    local lines = list_menu.build(spec)
+    for _, l in ipairs(lines) do
+      assert.is_nil(l:find("dismiss", 1, true))
+    end
+    local plain = list_menu.build(vim.tbl_extend("force", spec, { border_legend = false }))
+    assert.is_true(#plain > #lines)
+  end)
+
+  it("builds the one-line border legend with every key", function()
+    local chunks, width = list_menu.border_footer(spec)
+    local text = ""
+    for _, c in ipairs(chunks) do
+      text = text .. c[1]
+    end
+    assert.are.equal(" j/k/↑/↓ move  gg/G first/last  Enter select  x reset  q/<Esc> dismiss ", text)
+    assert.are.equal(vim.fn.strdisplaywidth(text), width)
+  end)
+
+  it("opens a window at least as wide as the legend, footer in the border", function()
+    local h = list_menu.open(spec)
+    local _, width = list_menu.border_footer(spec)
+    local cfg = vim.api.nvim_win_get_config(h.win)
+    assert.is_true(cfg.width >= width)
+    assert.is_table(cfg.footer)
+    h.close()
   end)
 end)

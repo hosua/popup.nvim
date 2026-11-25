@@ -131,6 +131,32 @@ function M.help(sections, opts)
   return lines, spans
 end
 
+--- One-line key legend for a window's bottom border (the float `footer`):
+--- ` key desc  key desc `, the key bright and the description grey, two
+--- spaces between pairs. Every entry is shown (nothing is dropped), so size
+--- the window with the returned width. Pure.
+--- Entries are `{ key, desc }` or `{ key = , desc = }`.
+--- @param entries (string[]|PopupLegendEntry)[]
+--- @param opts { key_hl?: string, desc_hl?: string }|nil
+--- @return table[] chunks { text, hl } for nvim_open_win's `footer`
+--- @return integer width display cells the legend needs
+function M.footer(entries, opts)
+  opts = opts or {}
+  local hints = {}
+  for i, e in ipairs(entries) do
+    hints[i] = { e.key or e[1], e.desc or e[2] }
+  end
+  local chunks = require("popup.hints").chunks(hints, math.huge, {
+    key_hl = opts.key_hl or "PopupKey",
+    action_hl = opts.desc_hl or "PopupFooter",
+  })
+  local width = 0
+  for _, c in ipairs(chunks) do
+    width = width + dw(c[1])
+  end
+  return chunks, width
+end
+
 --- Widest line in display cells, plus `extra`.
 --- @param lines string[]
 --- @param extra integer|nil
